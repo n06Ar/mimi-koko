@@ -1,17 +1,26 @@
 {
-  "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.17.0/.schema/devbox.schema.json",
-  "packages": ["nodejs@latest"],
-  "env": {
-    "DEVBOX_COREPACK_ENABLED": "true"
-  },
-  "shell": {
-    "init_hook": [
-      "pnpm install"
-    ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
-  }
+	"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.0/.schema/devbox.schema.json",
+	"packages": [
+		"nodejs@latest",
+		"postgresql@latest"
+	],
+	"env": {
+		"DEVBOX_COREPACK_ENABLED": "true",
+		"PGDATA": "$PWD/.devbox/postgres/data",
+		"PGHOST": "$PWD/.devbox/postgres",
+		"DATABASE_URL": "postgresql://mimikoko:mimikoko@localhost/mimikoko?host=$PWD/.devbox/postgres"
+	},
+	"shell": {
+		"init_hook": [
+			"pnpm install",
+			"mkdir -p $PGDATA",
+			"if [ ! -f $PGDATA/PG_VERSION ]; then initdb --no-locale --encoding=UTF8; fi",
+			"pg_ctl start -l $PGDATA/postgres.log -o '-k $PWD/.devbox/postgres' || true"
+		],
+		"scripts": {
+			"test": [
+				"echo \"Error: no test specified\" && exit 1"
+			]
+		}
+	}
 }

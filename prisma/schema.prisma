@@ -1,13 +1,146 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+	provider = "prisma-client"
+	output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+	provider = "postgresql"
+}
+
+model Family {
+  id          String   @id @default(uuid())
+  name        String
+  inviteCode  String   @unique @map("invite_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  members     FamilyMember[]
+  settlements Settlement[]
+
+  @@map("families")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  families        FamilyMember[]
+  expenses        Expense[]
+  accounts        Account[]
+  expenseMembers  ExpenseMember[]
+  csvImports      CsvImport[]
+
+  @@map("users")
+}
+
+model FamilyMember {
+  id       String   @id @default(uuid())
+  familyId String   @map("family_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  family Family @relation(fields: [familyId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([familyId, userId])
+  @@map("family_members")
+}
+
+model Account {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  name         String
+  accountType  String   @map("account_type")
+  providerName String?  @map("provider_name")
+  last4Digits  String?  @map("last4_digits")
+  billingDay   Int?     @map("billing_day")
+  closingDay   Int?     @map("closing_day")
+  isPrivate    Boolean  @default(false) @map("is_private")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id])
+  expenses Expense[]
+
+  @@map("accounts")
+}
+
+model Expense {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  accountId         String?   @map("account_id")
+  matchedExpenseId  String?   @map("matched_expense_id")
+  amount            Int
+  storeName         String?   @map("store_name")
+  category          String?
+  date              DateTime
+  paymentMethod     String?   @map("payment_method")
+  status            String    @default("confirmed")
+  isPrivate         Boolean   @default(false) @map("is_private")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  user            User            @relation(fields: [userId], references: [id])
+  account         Account?        @relation(fields: [accountId], references: [id])
+  matchedExpense  Expense?        @relation("ExpenseMatch", fields: [matchedExpenseId], references: [id])
+  matchedBy       Expense[]       @relation("ExpenseMatch")
+  expenseMembers  ExpenseMember[]
+  settlementItems SettlementItem[]
+
+  @@map("expenses")
+}
+
+model ExpenseMember {
+  id          String  @id @default(uuid())
+  expenseId   String  @map("expense_id")
+  userId      String  @map("user_id")
+  shareRatio  Float   @default(1.0) @map("share_ratio")
+
+  expense Expense @relation(fields: [expenseId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+  @@map("expense_members")
+}
+
+model Settlement {
+  id          String   @id @default(uuid())
+  familyId    String   @map("family_id")
+  periodStart DateTime @map("period_start")
+  periodEnd   DateTime @map("period_end")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  family Family           @relation(fields: [familyId], references: [id])
+  items  SettlementItem[]
+
+  @@map("settlements")
+}
+
+model SettlementItem {
+  id           String @id @default(uuid())
+  settlementId String @map("settlement_id")
+  expenseId    String @map("expense_id")
+  payerId      String @map("payer_id")
+  receiverId   String @map("receiver_id")
+  amount       Int
+
+  settlement Settlement @relation(fields: [settlementId], references: [id])
+  expense    Expense    @relation(fields: [expenseId], references: [id])
+
+  @@map("settlement_items")
+}
+
+model CsvImport {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  sourceType     String   @map("source_type")
+  status         String   @default("pending")
+  matchedCount   Int      @default(0) @map("matched_count")
+  unmatchedCount Int      @default(0) @map("unmatched_count")
+  importedAt     DateTime @default(now()) @map("imported_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("csv_imports")
 }
