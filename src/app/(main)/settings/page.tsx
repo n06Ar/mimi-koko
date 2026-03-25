@@ -18,11 +18,15 @@ export default function SettingsPage() {
   const [copiedCode, setCopiedCode] = useState(false);
   const utils = trpc.useUtils();
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (!family) return;
-    navigator.clipboard.writeText(family.inviteCode);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+    try {
+      await navigator.clipboard.writeText(family.inviteCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      console.error("クリップボードへのコピーに失敗しました");
+    }
   };
 
   const updateProfile = trpc.user.updateProfile.useMutation({
@@ -70,6 +74,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={handleCopyCode}
                   className="rounded-lg bg-[#EDE8E0] p-2 text-[#C4A882]"
                   aria-label="招待コードをコピー"
