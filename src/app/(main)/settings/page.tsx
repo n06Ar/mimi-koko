@@ -6,9 +6,6 @@ import { signOut } from "next-auth/react";
 import { Copy, Check, ChevronRight, Plus } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { Header } from "@/components/navigation/header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 
 export default function SettingsPage() {
   const { data: me } = trpc.user.me.useQuery();
@@ -42,36 +39,63 @@ export default function SettingsPage() {
     if (name) updateProfile.mutate({ name });
   };
 
+  const settingItems = [
+    { label: "口座・カード管理", href: "/accounts" },
+    { label: "CSVインポート", href: "/csv/import" },
+  ];
+
   return (
-    <div>
+    <div className="bg-[#FAFAF8] min-h-screen">
       <Header title="設定" />
-      <div className="p-4 flex flex-col gap-4">
-        <Card padding="md" shadow="sm">
-          <h2 className="mb-3 font-semibold text-[#3D3D3D]">プロフィール</h2>
-          <p className="mb-3 text-sm text-gray-500">{me?.email}</p>
-          <form onSubmit={handleSave} className="flex flex-col gap-3">
-            <Input
-              label="名前"
+
+      <div className="flex flex-col gap-4 p-4 pb-24">
+        {/* Profile Card */}
+        <div className="rounded-2xl bg-white p-4 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#C4A882]">
+              <span className="text-[18px] font-bold text-white">
+                {(me?.name ?? "?")[0]}
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-[16px] font-semibold text-[#3D3D3D]">{me?.name ?? "—"}</p>
+              <p className="text-[13px] text-[#9EA8B0]">{me?.email}</p>
+            </div>
+          </div>
+          <form onSubmit={handleSave} className="flex gap-2">
+            <input
+              type="text"
               value={name || me?.name || ""}
               onChange={(e) => setName(e.target.value)}
+              className="flex-1 rounded-xl px-3 text-[14px] text-[#3D3D3D] outline-none"
+              style={{ height: "40px", backgroundColor: "#F8F7F5", border: "1px solid #E0DAD0" }}
+              placeholder="名前を変更"
             />
-            <Button type="submit" disabled={updateProfile.isPending} size="sm">
-              {saved ? "保存しました！" : "保存"}
-            </Button>
+            <button
+              type="submit"
+              disabled={updateProfile.isPending}
+              className="rounded-xl px-4 text-[13px] font-medium text-[#C4A882]"
+              style={{ border: "1px solid #C4A882" }}
+            >
+              {saved ? "保存済み" : "保存"}
+            </button>
           </form>
-        </Card>
+        </div>
 
-        <Card padding="md" shadow="sm">
-          <h2 className="mb-3 font-semibold text-[#3D3D3D]">家族グループ</h2>
+        {/* Family Members Card */}
+        <div className="rounded-2xl bg-white p-4 flex flex-col gap-3">
+          <p className="text-[14px] font-semibold text-[#3D3D3D]">家族メンバー</p>
 
           {family ? (
             <>
-              <div className="mb-3 flex items-center justify-between rounded-xl bg-[#F9F5EE] px-4 py-3">
+              {/* Invite Code */}
+              <div
+                className="rounded-[10px] px-3.5 py-2.5 flex items-center justify-between"
+                style={{ backgroundColor: "#F9F5EE" }}
+              >
                 <div>
-                  <p className="text-xs text-gray-400">招待コード</p>
-                  <p className="font-mono text-lg font-bold text-[#3D3D3D]">
-                    {family.inviteCode}
-                  </p>
+                  <p className="text-[11px] font-medium text-[#9EA8B0]">招待コード</p>
+                  <p className="text-[16px] font-bold text-[#3D3D3D] tracking-wider">{family.inviteCode}</p>
                 </div>
                 <button
                   type="button"
@@ -83,45 +107,78 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              <div className="mb-3 flex flex-col gap-2">
-                {family.members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-[#C4A882]" />
-                    <span className="text-sm text-[#3D3D3D]">
-                      {m.user.name ?? m.user.email}
+              {/* Members */}
+              {family.members.map((m) => (
+                <div key={m.id} className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F0EA]">
+                    <span className="text-[13px] font-bold text-[#C4A882]">
+                      {(m.user.name ?? m.user.email ?? "?")[0]}
                     </span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-[14px] text-[#3D3D3D]">{m.user.name ?? m.user.email}</span>
+                  {m.userId === me?.id && (
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[11px] font-medium text-[#C4A882]"
+                      style={{ backgroundColor: "#F5F0EA" }}
+                    >
+                      自分
+                    </span>
+                  )}
+                </div>
+              ))}
+
+              {/* Share Button */}
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="flex items-center justify-center gap-2 rounded-xl text-[14px] font-medium text-[#C4A882]"
+                style={{ height: "48px", backgroundColor: "#F5F0EA" }}
+              >
+                {copiedCode ? "コピーしました！" : "招待コードを共有"}
+              </button>
             </>
           ) : (
-            <p className="mb-3 text-sm text-gray-400">
-              グループに参加していません
-            </p>
+            <>
+              <p className="text-[13px] text-[#9EA8B0]">グループに参加していません</p>
+              <Link
+                href="/family/setup"
+                className="flex items-center justify-between px-4 rounded-xl"
+                style={{ height: "48px", border: "1px solid #E0DAD0" }}
+              >
+                <span className="flex items-center gap-2 text-[14px] text-[#3D3D3D]">
+                  <Plus size={16} color="#C4A882" />
+                  グループを追加
+                </span>
+                <ChevronRight size={16} color="#9EA8B0" />
+              </Link>
+            </>
           )}
+        </div>
 
-          <Link
-            href="/family/setup"
-            className="flex w-full items-center justify-between rounded-lg border border-[#E0E0E0] px-4 py-3 text-sm text-[#3D3D3D] hover:bg-gray-50"
-          >
-            <span className="flex items-center gap-2">
-              <Plus size={16} className="text-[#C4A882]" />
-              グループを追加
-            </span>
-            <ChevronRight size={16} className="text-gray-400" />
-          </Link>
-        </Card>
+        {/* Settings List Card */}
+        <div className="rounded-2xl bg-white overflow-hidden">
+          {settingItems.map((item, i) => (
+            <Link key={item.href} href={item.href}>
+              <div>
+                {i > 0 && <div className="h-px mx-4" style={{ backgroundColor: "#F0EDE8" }} />}
+                <div className="flex items-center justify-between px-4" style={{ height: "56px" }}>
+                  <span className="text-[14px] text-[#3D3D3D]">{item.label}</span>
+                  <ChevronRight size={16} color="#9EA8B0" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-        <Card padding="md" shadow="sm">
-          <h2 className="mb-3 font-semibold text-[#3D3D3D]">アカウント</h2>
-          <Button
-            variant="outline"
-            className="w-full border-red-300 text-red-500 hover:bg-red-50"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            ログアウト
-          </Button>
-        </Card>
+        {/* Logout */}
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="text-[15px] font-semibold text-center w-full py-3"
+          style={{ color: "#EF4444" }}
+        >
+          ログアウト
+        </button>
       </div>
     </div>
   );
