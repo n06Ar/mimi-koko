@@ -12,7 +12,6 @@ const SOURCE_TYPES = [
   { value: "aeon_bank", label: "イオン銀行" },
   { value: "rakuten_bank", label: "楽天銀行" },
   { value: "paypay_bank", label: "PayPay銀行" },
-  { value: "other", label: "その他" },
 ];
 
 export default function CsvImportPage() {

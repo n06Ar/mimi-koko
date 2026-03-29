@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { Header } from "@/components/navigation/header";
 
@@ -70,11 +70,10 @@ export default function AccountsPage() {
                           deleteAccount.mutate({ id: account.id });
                         }
                       }}
-                      className="text-[12px] text-red-400 mr-2"
+                      className="text-[12px] text-red-400"
                     >
                       削除
                     </button>
-                    <ChevronRight size={16} color="#9EA8B0" />
                   </div>
                 </div>
               ))}
