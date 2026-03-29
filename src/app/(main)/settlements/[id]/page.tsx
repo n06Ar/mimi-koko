@@ -14,7 +14,14 @@ export default function SettlementDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const utils = trpc.useUtils();
   const { data: settlement, isLoading } = trpc.settlement.getById.useQuery({ id });
+  const complete = trpc.settlement.complete.useMutation({
+    onSuccess: () => {
+      utils.settlement.list.invalidate();
+      router.push("/settlements");
+    },
+  });
 
   if (isLoading) {
     return (
@@ -124,8 +131,13 @@ export default function SettlementDetailPage({
         className="fixed bottom-0 left-0 right-0 bg-white"
         style={{ height: "80px", borderTop: "1px solid #F0EDE8", padding: "12px 16px 20px 16px" }}
       >
-        <Button className="w-full" style={{ height: "52px", borderRadius: "12px" }}>
-          精算済みにする
+        <Button
+          className="w-full"
+          style={{ height: "52px", borderRadius: "12px" }}
+          onClick={() => complete.mutate({ id })}
+          disabled={complete.isPending || settlement.status === "completed"}
+        >
+          {complete.isPending ? "処理中..." : settlement.status === "completed" ? "精算済み" : "精算済みにする"}
         </Button>
       </div>
     </div>

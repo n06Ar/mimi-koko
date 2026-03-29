@@ -10,7 +10,7 @@ import { Header } from "@/components/navigation/header";
 export default function SettingsPage() {
   const { data: me } = trpc.user.me.useQuery();
   const { data: family } = trpc.family.getMyFamily.useQuery();
-  const [name, setName] = useState("");
+  const [name, setName] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const utils = trpc.useUtils();
@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name) updateProfile.mutate({ name });
+    if (name !== null) updateProfile.mutate({ name });
   };
 
   const settingItems = [
@@ -65,7 +65,7 @@ export default function SettingsPage() {
           <form onSubmit={handleSave} className="flex gap-2">
             <input
               type="text"
-              value={name || me?.name || ""}
+              value={name ?? me?.name ?? ""}
               onChange={(e) => setName(e.target.value)}
               className="flex-1 rounded-xl px-3 text-[14px] text-[#3D3D3D] outline-none"
               style={{ height: "40px", backgroundColor: "#F8F7F5", border: "1px solid #E0DAD0" }}

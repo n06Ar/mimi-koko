@@ -24,15 +24,24 @@ export default function FamilyInvitePage() {
     return null;
   }
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(family.inviteCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(family.inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      console.error("クリップボードへのコピーに失敗しました");
+    }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (navigator.share) {
-      navigator.share({ text: `MimiKokoに参加してね！招待コード: ${family.inviteCode}` });
+      try {
+        await navigator.share({ text: `MimiKokoに参加してね！招待コード: ${family.inviteCode}` });
+      } catch {
+        // キャンセルまたは失敗時はコピーにフォールバック
+        handleCopy();
+      }
     } else {
       handleCopy();
     }

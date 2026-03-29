@@ -24,6 +24,10 @@ export default function SettlementsPage() {
     onSettled: () => setCreating(false),
   });
 
+  const completeSettlement = trpc.settlement.complete.useMutation({
+    onSuccess: () => utils.settlement.list.invalidate(),
+  });
+
   const handleCreate = () => {
     if (!family?.id) return;
     setCreating(true);
@@ -85,11 +89,15 @@ export default function SettlementsPage() {
                   ))}
                   <button
                     type="button"
-                    onClick={(e) => { e.preventDefault(); }}
-                    className="flex items-center justify-center rounded-[10px] text-[14px] font-medium text-[#C4A882]"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      completeSettlement.mutate({ id: settlement.id });
+                    }}
+                    disabled={completeSettlement.isPending}
+                    className="flex items-center justify-center rounded-[10px] text-[14px] font-medium text-[#C4A882] disabled:opacity-50"
                     style={{ height: "44px", border: "1px solid #C4A882" }}
                   >
-                    精算済みにする
+                    {completeSettlement.isPending ? "処理中..." : "精算済みにする"}
                   </button>
                 </div>
               </Link>

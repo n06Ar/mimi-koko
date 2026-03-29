@@ -21,7 +21,14 @@ export default function AccountsPage() {
     onSuccess: () => utils.account.list.invalidate(),
   });
 
-  const grouped = ACCOUNT_TYPE_ORDER.reduce<Record<string, typeof accounts>>((acc, type) => {
+  // 既知の順序 + 未知のタイプも漏れなく表示
+  const knownTypes = new Set(ACCOUNT_TYPE_ORDER);
+  const extraTypes = [...new Set(accounts?.map((a) => a.accountType) ?? [])].filter(
+    (t) => !knownTypes.has(t)
+  );
+  const allTypes = [...ACCOUNT_TYPE_ORDER, ...extraTypes];
+
+  const grouped = allTypes.reduce<Record<string, typeof accounts>>((acc, type) => {
     const items = accounts?.filter((a) => a.accountType === type) ?? [];
     if (items.length > 0) acc[type] = items;
     return acc;
@@ -32,7 +39,7 @@ export default function AccountsPage() {
       <Header
         title="口座・カード"
         rightAction={
-          <Link href="/accounts/new" className="text-[#C4A882]">
+          <Link href="/accounts/new" aria-label="口座を追加" className="text-[#C4A882]">
             <Plus size={22} />
           </Link>
         }
@@ -65,12 +72,13 @@ export default function AccountsPage() {
                     </div>
                     <button
                       type="button"
+                      disabled={deleteAccount.isPending}
                       onClick={() => {
                         if (confirm("この口座を削除しますか？")) {
                           deleteAccount.mutate({ id: account.id });
                         }
                       }}
-                      className="text-[12px] text-red-400"
+                      className="text-[12px] text-red-400 disabled:opacity-40"
                     >
                       削除
                     </button>
