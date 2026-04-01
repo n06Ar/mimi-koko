@@ -36,7 +36,10 @@ export default function SettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name !== null) updateProfile.mutate({ name });
+    if (name === null) return;
+    const normalized = name.trim();
+    if (normalized.length === 0) return;
+    updateProfile.mutate({ name: normalized });
   };
 
   const settingItems = [
@@ -134,7 +137,7 @@ export default function SettingsPage() {
                 className="flex items-center justify-center gap-2 rounded-xl text-[14px] font-medium text-[#C4A882]"
                 style={{ height: "48px", backgroundColor: "#F5F0EA" }}
               >
-                {copiedCode ? "コピーしました！" : "招待コードを共有"}
+                {copiedCode ? "コピーしました！" : "招待コードをコピー"}
               </button>
             </>
           ) : (

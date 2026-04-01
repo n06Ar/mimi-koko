@@ -54,6 +54,8 @@ export default function SettlementDetailPage({
   const members = new Map(
     settlement.family.members.map((m) => [m.userId, m.user.name])
   );
+  const getDisplayName = (userId: string) => members.get(userId)?.trim() || "不明";
+  const getInitial = (userId: string) => members.get(userId)?.trim()?.[0] || "?";
   const totalAmount = settlement.items.reduce((sum, item) => sum + item.amount, 0);
 
   return (
@@ -97,18 +99,18 @@ export default function SettlementDetailPage({
               <div key={item.id} className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F0EA]">
                   <span className="text-[12px] font-bold text-[#C4A882]">
-                    {(members.get(item.payerId) ?? "?")[0]}
+                    {getInitial(item.payerId)}
                   </span>
                 </div>
                 <ArrowRight size={16} color="#9EA8B0" />
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F0EA]">
                   <span className="text-[12px] font-bold text-[#C4A882]">
-                    {(members.get(item.receiverId) ?? "?")[0]}
+                    {getInitial(item.receiverId)}
                   </span>
                 </div>
                 <div className="flex-1">
                   <span className="text-[13px] text-[#3D3D3D]">
-                    {members.get(item.payerId) ?? "不明"} → {members.get(item.receiverId) ?? "不明"}
+                    {getDisplayName(item.payerId)} → {getDisplayName(item.receiverId)}
                   </span>
                 </div>
                 <span className="text-[14px] font-bold text-[#3D3D3D]">
