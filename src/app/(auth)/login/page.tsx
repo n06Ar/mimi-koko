@@ -4,9 +4,9 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,10 +36,22 @@ export default function LoginPage() {
   }
 
   return (
-    <Card padding="lg" shadow="md">
-      <h1 className="mb-6 text-center text-2xl font-bold text-[#3D3D3D]">
-        MimiKoko
-      </h1>
+    <div
+      className="w-full rounded-[20px] bg-white p-8 flex flex-col gap-6"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.094)" }}
+    >
+      {/* Logo Section */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C4A882]">
+          <Wallet size={28} color="white" />
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <h1 className="text-[28px] font-bold text-[#3D3D3D]">MimiKoko</h1>
+          <p className="text-sm text-[#9EA8B0]">家族のお金を一緒に管理</p>
+        </div>
+      </div>
+
+      {/* Form Section */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
           label="メールアドレス"
@@ -58,16 +70,18 @@ export default function LoginPage() {
           autoComplete="current-password"
         />
         {error && <p className="text-sm text-red-500">{error}</p>}
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button type="submit" disabled={loading} className="w-full" style={{ height: "48px" }}>
           {loading ? "ログイン中..." : "ログイン"}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-500">
-        アカウントをお持ちでない方は{" "}
-        <Link href="/signup" className="text-[#C4A882] hover:underline">
+
+      {/* Footer */}
+      <div className="flex items-center justify-center gap-1">
+        <span className="text-[13px] text-[#9EA8B0]">アカウントをお持ちでない方？</span>
+        <Link href="/signup" className="text-[13px] font-semibold text-[#C4A882]">
           新規登録
         </Link>
-      </p>
-    </Card>
+      </div>
+    </div>
   );
 }

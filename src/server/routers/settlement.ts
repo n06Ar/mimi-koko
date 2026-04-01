@@ -129,4 +129,24 @@ export const settlementRouter = router({
 
       return settlement;
     }),
+
+  complete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const settlement = await ctx.prisma.settlement.findUnique({
+        where: { id: input.id },
+        include: { family: { include: { members: true } } },
+      });
+      if (!settlement) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const isMember = settlement.family.members.some(
+        (m) => m.userId === ctx.session.user.id
+      );
+      if (!isMember) throw new TRPCError({ code: "FORBIDDEN" });
+
+      return ctx.prisma.settlement.update({
+        where: { id: input.id },
+        data: { status: "completed" },
+      });
+    }),
 });

@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X, Upload } from "lucide-react";
 import { trpc } from "@/trpc/client";
-import { Header } from "@/components/navigation/header";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 const SOURCE_TYPES = [
   { value: "rakuten_card", label: "楽天カード" },
-  { value: "sumitomo_visa", label: "三井住友VISA" },
+  { value: "sumitomo_visa", label: "三井住友カード" },
   { value: "aeon_bank", label: "イオン銀行" },
   { value: "rakuten_bank", label: "楽天銀行" },
   { value: "paypay_bank", label: "PayPay銀行" },
@@ -17,8 +16,10 @@ const SOURCE_TYPES = [
 
 export default function CsvImportPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [sourceType, setSourceType] = useState("rakuten_card");
   const [csvContent, setCsvContent] = useState("");
+  const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
 
   const importCsv = trpc.csvImport.import.useMutation({
@@ -36,10 +37,9 @@ export default function CsvImportPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => setCsvContent(reader.result as string);
-    // Shift-JIS 対応
     reader.readAsText(file, "shift_jis");
   };
 
@@ -54,48 +54,75 @@ export default function CsvImportPage() {
   };
 
   return (
-    <div>
-      <Header title="CSV取込" />
-      <div className="p-4">
-        <Card padding="md" shadow="sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#3D3D3D]">
-                取込先
-              </label>
-              <select
-                value={sourceType}
-                onChange={(e) => setSourceType(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 focus:border-[#C4A882] focus:outline-none"
+    <div className="bg-[#FAFAF8] min-h-screen">
+      <header
+        className="sticky top-0 z-40 bg-white"
+        style={{ height: "56px", borderBottom: "1px solid #F0EDE8", display: "flex", alignItems: "center", padding: "0 20px" }}
+      >
+        <div className="flex w-full items-center justify-between">
+          <button type="button" onClick={() => router.back()} className="text-[#9EA8B0]">
+            <X size={22} />
+          </button>
+          <h1 className="text-base font-semibold text-[#3D3D3D]">CSVインポート</h1>
+          <div className="w-8" />
+        </div>
+      </header>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-5 py-5 pb-10">
+        {/* Source Type Selection */}
+        <div className="flex flex-col gap-3">
+          <span className="text-[13px] font-semibold text-[#3D3D3D]">金融機関を選択</span>
+          <div className="grid grid-cols-2 gap-3">
+            {SOURCE_TYPES.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setSourceType(s.value)}
+                className="flex items-center justify-center rounded-xl text-[14px] font-medium transition-colors"
+                style={{
+                  height: "60px",
+                  backgroundColor: sourceType === s.value ? "#C4A882" : "#FFFFFF",
+                  color: sourceType === s.value ? "#FFFFFF" : "#3D3D3D",
+                }}
               >
-                {SOURCE_TYPES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#3D3D3D]">
-                CSVファイル
-              </label>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="text-sm text-gray-500"
-              />
-              {csvContent && (
-                <p className="text-xs text-green-600">ファイル読み込み完了</p>
-              )}
-            </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" disabled={importCsv.isPending} className="w-full">
-              {importCsv.isPending ? "取込中..." : "取込む"}
-            </Button>
-          </form>
-        </Card>
-      </div>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* File Selection */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center justify-center gap-2 rounded-xl"
+          style={{ height: "52px", backgroundColor: "#F5F0EA" }}
+        >
+          <Upload size={18} color="#C4A882" />
+          <span className="text-[14px] font-medium text-[#C4A882]">CSVファイルを選択</span>
+        </button>
+        {fileName && (
+          <p className="text-[12px] text-[#9EA8B0] text-center">{fileName}</p>
+        )}
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <Button
+          type="submit"
+          disabled={importCsv.isPending || !csvContent}
+          className="w-full"
+          style={{ height: "52px", borderRadius: "12px" }}
+        >
+          {importCsv.isPending ? "取込中..." : "インポート開始"}
+        </Button>
+      </form>
     </div>
   );
 }
